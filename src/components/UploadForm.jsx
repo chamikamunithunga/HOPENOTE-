@@ -1982,6 +1982,74 @@ export function UploadForm() {
         )}
 
         </Box>
+
+        {/* Submit Button Section */}
+        <Box
+          sx={{
+            mt: { xs: 4, sm: 4.5, md: 5 },
+            display: 'flex',
+            justifyContent: 'center',
+            px: { xs: 1, sm: 0 }
+          }}
+        >
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={mode === 'file'}
+            fullWidth
+            sx={{
+              maxWidth: { xs: '100%', sm: '500px', md: '600px' },
+              px: { xs: 4, sm: 5, md: 6 },
+              py: { xs: 1.5, sm: 1.6, md: 1.8 },
+              borderRadius: { xs: 3, sm: 3.5, md: 999 },
+              fontSize: { xs: 15, sm: 16, md: 17 },
+              fontWeight: 800,
+              letterSpacing: { xs: 0.5, sm: 0.8, md: 1 },
+              textTransform: 'none',
+              backgroundImage: 'linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%)',
+              boxShadow: (theme) =>
+                theme.palette.mode === 'light'
+                  ? '0 20px 40px rgba(22,163,74,0.4), 0 0 0 1px rgba(22,163,74,0.1)'
+                  : '0 20px 40px rgba(22,163,74,0.6), 0 0 0 1px rgba(34,197,94,0.2)',
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                transition: 'left 0.5s ease'
+              },
+              '&:hover': {
+                backgroundImage: 'linear-gradient(135deg, #15803d 0%, #16a34a 50%, #22c55e 100%)',
+                transform: 'translateY(-3px) scale(1.02)',
+                boxShadow: (theme) =>
+                  theme.palette.mode === 'light'
+                    ? '0 24px 48px rgba(22,163,74,0.5), 0 0 0 1px rgba(22,163,74,0.2)'
+                    : '0 24px 48px rgba(22,163,74,0.7), 0 0 0 1px rgba(34,197,94,0.3)',
+                '&::before': {
+                  left: '100%'
+                }
+              },
+              '&:active': {
+                transform: 'translateY(-1px) scale(0.98)'
+              },
+              '&:disabled': {
+                backgroundImage: 'linear-gradient(135deg, #94a3b8, #cbd5e1)',
+                color: '#64748b',
+                boxShadow: 'none',
+                transform: 'none'
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
+            {mode === 'file' ? '⏳ Upload (Coming Soon)' : '✨ Submit Donation'}
+          </Button>
+        </Box>
       </Box>
     </Paper>
   );

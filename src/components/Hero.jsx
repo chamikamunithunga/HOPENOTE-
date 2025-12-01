@@ -49,7 +49,7 @@ export function Hero({ stats }) {
       {/* Text and live snapshot content below the slideshow */}
       <Box
       sx={{
-        pt: { xs: 8, sm: 10, md: 12, lg: 2 },
+        pt: { xs: 2, sm: 3, md: 4, lg: 1 },
         pb: { xs: 3, sm: 4, md: 4, lg: 6 },
           px: { xs: 1.5, sm: 2, md: 2 },
           bgcolor: (theme) =>
@@ -75,7 +75,7 @@ export function Hero({ stats }) {
                 gap: { xs: 0.8, sm: 1.2, md: 1.6, lg: 2.2 },
                 mb: { xs: 2, sm: 2.5, md: 4, lg: 5 },
                 flexWrap: 'wrap',
-                mt: { xs: 4, sm: 6, md: 8, lg: 10 },
+                mt: { xs: 0, sm: 0, md: 1, lg: 1 },
                 px: { xs: 1, sm: 0 }
               }}
             >
@@ -391,16 +391,16 @@ export function Hero({ stats }) {
                 sx={{
                   borderRadius: { xs: 2, sm: 2.5, md: 3 },
                   p: { xs: 2, sm: 2.5, md: 2.5, lg: 3 },
-                  bgcolor: (theme) =>
-                    theme.palette.mode === 'light'
-                      ? 'rgba(15,23,42,0.92)'
+                bgcolor: (theme) =>
+                  theme.palette.mode === 'light'
+                    ? 'rgba(15,23,42,0.92)'
                       : 'rgba(6, 15, 25, 0.95)',
                   backdropFilter: 'blur(20px)',
                   color: 'rgba(241,245,249,0.98)',
                   width: { xs: '100%', md: '45%' },
                   maxWidth: { xs: '100%', md: '400px' },
-                  boxShadow: (theme) =>
-                    theme.palette.mode === 'light'
+                boxShadow: (theme) =>
+                  theme.palette.mode === 'light'
                       ? '0 20px 40px rgba(15,23,42,0.5)'
                       : '0 20px 40px rgba(0,0,0,0.8)',
                   textAlign: 'center',
@@ -420,8 +420,8 @@ export function Hero({ stats }) {
                     letterSpacing: 0.5
                   }}
                 >
-                  Live snapshot
-                </Typography>
+                Live snapshot
+              </Typography>
                 <Typography
                   variant="h4"
                   sx={{
@@ -430,8 +430,8 @@ export function Hero({ stats }) {
                     fontWeight: 700
                   }}
                 >
-                  Students catching up today
-                </Typography>
+                Students catching up today
+              </Typography>
                 <Typography
                   variant="h2"
                   sx={{
@@ -443,8 +443,8 @@ export function Hero({ stats }) {
                   }}
                 >
                   {totalResources > 0 ? `${totalResources * 3}+` : '–'}
-                </Typography>
-                <Typography
+              </Typography>
+              <Typography
                   variant="body2"
                   sx={{
                     display: 'block',
@@ -455,12 +455,12 @@ export function Hero({ stats }) {
                   }}
                 >
                   Counting shared notes, WhatsApp study groups, and university links uploaded so far.
-                </Typography>
-              </Box>
+              </Typography>
+            </Box>
 
               {/* Promo Image - Right Side */}
               <Box
-                sx={{
+              sx={{
                   width: { xs: '100%', md: '55%' },
                   maxWidth: { xs: '100%', md: '500px' },
                   display: 'flex',
@@ -482,7 +482,7 @@ export function Hero({ stats }) {
                   }}
                 />
               </Box>
-            </Box>
+          </Box>
         </Box>
       </Container>
     </Box>

@@ -110,12 +110,33 @@ export function YoutubeChannels() {
                 {channel.subject || 'YouTube Channel'}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: channel.description ? 0.2 : 0, flexWrap: 'wrap' }}>
-                {channel.grade && (
-                  <Chip
-                    size="small"
-                    label={`Grade ${channel.grade}`}
-                    sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
-                  />
+                {channel.level === 'university' ? (
+                  <>
+                    {channel.universityName && (
+                      <Chip
+                        size="small"
+                        label={channel.universityName}
+                        sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                      />
+                    )}
+                    {channel.year && (
+                      <Chip
+                        size="small"
+                        label={`Year ${channel.year}`}
+                        sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {channel.grade && (
+                      <Chip
+                        size="small"
+                        label={`Grade ${channel.grade}`}
+                        sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                      />
+                    )}
+                  </>
                 )}
                 {channel.medium && channel.medium !== 'all' && (
                   <Chip

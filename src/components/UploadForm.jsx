@@ -339,14 +339,37 @@ export function UploadForm() {
           createdAt: serverTimestamp()
         });
       } else if (mode === 'youtube') {
-        await addDoc(collection(db, 'youtubeChannels'), {
+        const youtubeData = {
           subject: form.subject || '',
-          grade: form.grade || '',
+          level: form.level || 'school',
           medium: form.medium || '',
           url: form.youtubeChannelLink,
           description: form.description || '',
           createdAt: serverTimestamp()
-        });
+        };
+        if (form.level === 'university') {
+          youtubeData.universityName = form.universityName || '';
+          youtubeData.year = form.grade || ''; // Use grade field for year in university context
+        } else {
+          youtubeData.grade = form.grade || '';
+        }
+        await addDoc(collection(db, 'youtubeChannels'), youtubeData);
+      } else if (mode === 'website') {
+        const websiteData = {
+          subject: form.subject || '',
+          level: form.level || 'school',
+          medium: form.medium || '',
+          url: form.websiteLink,
+          description: form.description || '',
+          createdAt: serverTimestamp()
+        };
+        if (form.level === 'university') {
+          websiteData.universityName = form.universityName || '';
+          websiteData.year = form.grade || ''; // Use grade field for year in university context
+        } else {
+          websiteData.grade = form.grade || '';
+        }
+        await addDoc(collection(db, 'educationWebsites'), websiteData);
       }
       // Other modes (file) can be wired similarly later
     } catch (error) {

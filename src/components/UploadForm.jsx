@@ -560,6 +560,7 @@ export function UploadForm() {
                   <MenuItem value="Sinhala">Sinhala Medium</MenuItem>
                   <MenuItem value="Tamil">Tamil Medium</MenuItem>
                   <MenuItem value="English">English Medium</MenuItem>
+                  <MenuItem value="Sinhala and English">Sinhala and English</MenuItem>
                   <MenuItem value="Japanese">Japanese Medium</MenuItem>
                   <MenuItem value="Korean">Korean Medium</MenuItem>
                   <MenuItem value="Hindi">Hindi Medium</MenuItem>

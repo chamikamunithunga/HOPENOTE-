@@ -16,6 +16,9 @@ import { NotesGrid } from './components/NotesGrid.jsx';
 import { UploadForm } from './components/UploadForm.jsx';
 import { WhatsappGroups } from './components/WhatsappGroups.jsx';
 import { UniversityGroups } from './components/UniversityGroups.jsx';
+import { TelegramGroups } from './components/TelegramGroups.jsx';
+import { WhatsappChannels } from './components/WhatsappChannels.jsx';
+import { YoutubeChannels } from './components/YoutubeChannels.jsx';
 import { Feedback } from './components/Feedback.jsx';
 import { ScrollToTop } from './components/ScrollToTop.jsx';
 import { getAppTheme } from './theme.js';
@@ -263,6 +266,39 @@ export default function App() {
             </div>
 
             <UniversityGroups />
+          </section>
+
+          <section id="telegram-groups" className="section">
+            <div className="section-header">
+              <h2>Telegram Study Groups</h2>
+              <p className="section-subtitle">
+                Join Telegram groups where volunteers share notes, updates, and study materials to help students continue learning after disasters.
+              </p>
+            </div>
+
+            <TelegramGroups />
+          </section>
+
+          <section id="whatsapp-channels" className="section">
+            <div className="section-header">
+              <h2>WhatsApp Channels</h2>
+              <p className="section-subtitle">
+                Subscribe to WhatsApp Channels for educational content, updates, and study materials broadcasted to help students stay informed and learn.
+              </p>
+            </div>
+
+            <WhatsappChannels />
+          </section>
+
+          <section id="youtube-channels" className="section">
+            <div className="section-header">
+              <h2>YouTube Channels</h2>
+              <p className="section-subtitle">
+                Subscribe to YouTube Channels for educational videos, tutorials, and lessons to help students learn visually, especially when physical resources are lost.
+              </p>
+            </div>
+
+            <YoutubeChannels />
           </section>
 
           <section id="donate" className="section section-alt">

@@ -25,15 +25,15 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import donateImage from '../images/Gemini_Generated_Image_d5zif3d5zif3d5zi.png';
 
 const initialFormState = {
-  subject: '',
-  grade: '',
-  level: 'school',
-  medium: '',
-  file: null,
-  whatsappLink: '',
-  driveLink: '',
-  universityName: '',
-  description: ''
+    subject: '',
+    grade: '',
+    level: 'school',
+    medium: '',
+    file: null,
+    whatsappLink: '',
+    driveLink: '',
+    universityName: '',
+    description: ''
 };
 
 export function UploadForm() {
@@ -560,6 +560,9 @@ export function UploadForm() {
                   <MenuItem value="Sinhala">Sinhala Medium</MenuItem>
                   <MenuItem value="Tamil">Tamil Medium</MenuItem>
                   <MenuItem value="English">English Medium</MenuItem>
+                  <MenuItem value="Japanese">Japanese Medium</MenuItem>
+                  <MenuItem value="Korean">Korean Medium</MenuItem>
+                  <MenuItem value="Hindi">Hindi Medium</MenuItem>
                 </Select>
                 <FormHelperText>
                   Choose the language that best matches your notes or links.

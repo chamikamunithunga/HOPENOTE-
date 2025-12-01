@@ -84,6 +84,14 @@ export function UploadForm() {
       }
       // Update form with sanitized URL
       form.driveLink = driveUrl;
+      if (form.level === 'university' && !form.universityName.trim()) {
+        setError('Please enter the University Name.');
+        return;
+      }
+      if (form.level === 'school' && !form.grade) {
+        setError('Please select a Grade.');
+        return;
+      }
     }
 
     if (mode === 'whatsapp' || mode === 'uni') {
@@ -109,6 +117,14 @@ export function UploadForm() {
         return;
       }
       form.telegramLink = telegramUrl;
+      if (form.level === 'university' && !form.universityName.trim()) {
+        setError('Please enter the University Name.');
+        return;
+      }
+      if (form.level === 'school' && !form.grade) {
+        setError('Please select a Grade.');
+        return;
+      }
     }
 
     if (mode === 'whatsappChannel') {
@@ -121,6 +137,14 @@ export function UploadForm() {
         return;
       }
       form.whatsappChannelLink = channelUrl;
+      if (form.level === 'university' && !form.universityName.trim()) {
+        setError('Please enter the University Name.');
+        return;
+      }
+      if (form.level === 'school' && !form.grade) {
+        setError('Please select a Grade.');
+        return;
+      }
     }
 
     if (mode === 'youtube') {
@@ -133,6 +157,25 @@ export function UploadForm() {
         return;
       }
       form.youtubeChannelLink = youtubeUrl;
+      if (form.level === 'university' && !form.universityName.trim()) {
+        setError('Please enter the University Name.');
+        return;
+      }
+      if (form.level === 'school' && !form.grade) {
+        setError('Please select a Grade.');
+        return;
+      }
+    }
+
+    if (mode === 'whatsapp') {
+      if (form.level === 'university' && !form.universityName.trim()) {
+        setError('Please enter the University Name.');
+        return;
+      }
+      if (form.level === 'school' && !form.grade) {
+        setError('Please select a Grade.');
+        return;
+      }
     }
 
     // Sanitize text fields
@@ -661,33 +704,33 @@ export function UploadForm() {
             ) : (
               <>
                 {(mode === 'links' || mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube') && (
-                  <>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Subject"
-                        id="subject"
-                        name="subject"
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Subject"
+                    id="subject"
+                    name="subject"
                         placeholder="e.g. Mathematics, History, Science or All subjects"
-                        value={form.subject}
-                        onChange={handleChange}
-                        required
+                    value={form.subject}
+                    onChange={handleChange}
+                    required
                         helperText={
                           mode === 'links'
                             ? 'For links that help everyone, you can type "All subjects".'
                             : ''
                         }
-                      />
-                    </Grid>
+                  />
+                </Grid>
 
-                    {mode === 'links' && (
+                    {(mode === 'links' || mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube') && (
                       <>
                         <Grid item xs={12} md={6}>
                           <FormControl fullWidth required>
-                            <InputLabel id="level-links-label">Level</InputLabel>
+                            <InputLabel id="level-other-label">Level</InputLabel>
                             <Select
-                              labelId="level-links-label"
-                              id="level-links"
+                              labelId="level-other-label"
+                              id="level-other"
                               name="level"
                               label="Level"
                               value={form.level}
@@ -700,41 +743,41 @@ export function UploadForm() {
                         </Grid>
 
                         {form.level === 'school' ? (
-                          <Grid item xs={12} md={6}>
-                            <FormControl fullWidth required>
-                              <InputLabel id="grade-links-label">Grade</InputLabel>
-                              <Select
-                                labelId="grade-links-label"
-                                id="grade-links"
-                                name="grade"
-                                label="Grade"
-                                value={form.grade}
-                                onChange={handleChange}
-                              >
-                                <MenuItem value="">
-                                  <em>Grade</em>
-                                </MenuItem>
-                                <MenuItem value="1">Grade 1</MenuItem>
-                                <MenuItem value="2">Grade 2</MenuItem>
-                                <MenuItem value="3">Grade 3</MenuItem>
-                                <MenuItem value="4">Grade 4</MenuItem>
-                                <MenuItem value="5">Grade 5</MenuItem>
-                                <MenuItem value="6">Grade 6</MenuItem>
-                                <MenuItem value="7">Grade 7</MenuItem>
-                                <MenuItem value="8">Grade 8</MenuItem>
-                                <MenuItem value="9">Grade 9</MenuItem>
-                                <MenuItem value="10">Grade 10</MenuItem>
-                                <MenuItem value="11">Grade 11</MenuItem>
-                                <MenuItem value="12">Grade 12</MenuItem>
-                              </Select>
-                            </FormControl>
-                          </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth required>
+                              <InputLabel id="grade-other-label">Grade</InputLabel>
+                    <Select
+                                labelId="grade-other-label"
+                                id="grade-other"
+                      name="grade"
+                      label="Grade"
+                      value={form.grade}
+                      onChange={handleChange}
+                    >
+                      <MenuItem value="">
+                        <em>Grade</em>
+                      </MenuItem>
+                      <MenuItem value="1">Grade 1</MenuItem>
+                      <MenuItem value="2">Grade 2</MenuItem>
+                      <MenuItem value="3">Grade 3</MenuItem>
+                      <MenuItem value="4">Grade 4</MenuItem>
+                      <MenuItem value="5">Grade 5</MenuItem>
+                      <MenuItem value="6">Grade 6</MenuItem>
+                      <MenuItem value="7">Grade 7</MenuItem>
+                      <MenuItem value="8">Grade 8</MenuItem>
+                      <MenuItem value="9">Grade 9</MenuItem>
+                      <MenuItem value="10">Grade 10</MenuItem>
+                      <MenuItem value="11">Grade 11</MenuItem>
+                      <MenuItem value="12">Grade 12</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
                         ) : (
                           <Grid item xs={12} md={6}>
                             <TextField
                               fullWidth
                               label="University Name"
-                              id="university-name-links"
+                              id="university-name-other"
                               name="universityName"
                               placeholder="e.g. University of Colombo, University of Peradeniya"
                               value={form.universityName}
@@ -745,85 +788,85 @@ export function UploadForm() {
                         )}
                       </>
                     )}
-
-                    {(mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube') && (
-                      <Grid item xs={12} md={6}>
-                        <FormControl fullWidth required>
-                          <InputLabel id="grade-other-label">Grade</InputLabel>
-                          <Select
-                            labelId="grade-other-label"
-                            id="grade-other"
-                            name="grade"
-                            label="Grade"
-                            value={form.grade}
-                            onChange={handleChange}
-                          >
-                            <MenuItem value="">
-                              <em>Grade</em>
-                            </MenuItem>
-                            <MenuItem value="1">Grade 1</MenuItem>
-                            <MenuItem value="2">Grade 2</MenuItem>
-                            <MenuItem value="3">Grade 3</MenuItem>
-                            <MenuItem value="4">Grade 4</MenuItem>
-                            <MenuItem value="5">Grade 5</MenuItem>
-                            <MenuItem value="6">Grade 6</MenuItem>
-                            <MenuItem value="7">Grade 7</MenuItem>
-                            <MenuItem value="8">Grade 8</MenuItem>
-                            <MenuItem value="9">Grade 9</MenuItem>
-                            <MenuItem value="10">Grade 10</MenuItem>
-                            <MenuItem value="11">Grade 11</MenuItem>
-                            <MenuItem value="12">Grade 12</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                    )}
                   </>
                 )}
 
                 {mode === 'whatsapp' && (
-                  <>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Subject"
-                        id="subject"
-                        name="subject"
+              <>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Subject"
+                    id="subject"
+                    name="subject"
                         placeholder="e.g. Mathematics, History, Science"
-                        value={form.subject}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Grid>
+                    value={form.subject}
+                    onChange={handleChange}
+                    required
+                  />
+                </Grid>
 
-                    <Grid item xs={12} md={6}>
-                      <FormControl fullWidth required>
-                        <InputLabel id="grade-whatsapp-label">Grade</InputLabel>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth required>
+                        <InputLabel id="level-whatsapp-label">Level</InputLabel>
                         <Select
-                          labelId="grade-whatsapp-label"
-                          id="grade-whatsapp"
-                          name="grade"
-                          label="Grade"
-                          value={form.grade}
+                          labelId="level-whatsapp-label"
+                          id="level-whatsapp"
+                          name="level"
+                          label="Level"
+                          value={form.level}
                           onChange={handleChange}
                         >
-                          <MenuItem value="">
-                            <em>Grade</em>
-                          </MenuItem>
-                          <MenuItem value="1">Grade 1</MenuItem>
-                          <MenuItem value="2">Grade 2</MenuItem>
-                          <MenuItem value="3">Grade 3</MenuItem>
-                          <MenuItem value="4">Grade 4</MenuItem>
-                          <MenuItem value="5">Grade 5</MenuItem>
-                          <MenuItem value="6">Grade 6</MenuItem>
-                          <MenuItem value="7">Grade 7</MenuItem>
-                          <MenuItem value="8">Grade 8</MenuItem>
-                          <MenuItem value="9">Grade 9</MenuItem>
-                          <MenuItem value="10">Grade 10</MenuItem>
-                          <MenuItem value="11">Grade 11</MenuItem>
-                          <MenuItem value="12">Grade 12</MenuItem>
+                          <MenuItem value="school">School</MenuItem>
+                          <MenuItem value="university">University</MenuItem>
                         </Select>
                       </FormControl>
                     </Grid>
+
+                    {form.level === 'school' ? (
+                      <Grid item xs={12} md={6}>
+                        <FormControl fullWidth required>
+                          <InputLabel id="grade-whatsapp-label">Grade</InputLabel>
+                    <Select
+                            labelId="grade-whatsapp-label"
+                            id="grade-whatsapp"
+                      name="grade"
+                      label="Grade"
+                      value={form.grade}
+                      onChange={handleChange}
+                    >
+                      <MenuItem value="">
+                        <em>Grade</em>
+                      </MenuItem>
+                      <MenuItem value="1">Grade 1</MenuItem>
+                      <MenuItem value="2">Grade 2</MenuItem>
+                      <MenuItem value="3">Grade 3</MenuItem>
+                      <MenuItem value="4">Grade 4</MenuItem>
+                      <MenuItem value="5">Grade 5</MenuItem>
+                      <MenuItem value="6">Grade 6</MenuItem>
+                      <MenuItem value="7">Grade 7</MenuItem>
+                      <MenuItem value="8">Grade 8</MenuItem>
+                      <MenuItem value="9">Grade 9</MenuItem>
+                      <MenuItem value="10">Grade 10</MenuItem>
+                      <MenuItem value="11">Grade 11</MenuItem>
+                      <MenuItem value="12">Grade 12</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                    ) : (
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          label="University Name"
+                          id="university-name-whatsapp"
+                          name="universityName"
+                          placeholder="e.g. University of Colombo, University of Peradeniya"
+                          value={form.universityName}
+                          onChange={handleChange}
+                          required
+                        />
+                      </Grid>
+                    )}
                   </>
                 )}
               </>

@@ -142,13 +142,23 @@ export function UploadForm() {
     // Persist to backend / Firestore depending on mode
     try {
       if (mode === 'links') {
-        await addDoc(collection(db, 'driveLinks'), {
-          grade: form.grade,
+        const driveLinkData = {
           medium: form.medium,
           url: form.driveLink,
           description: form.subject || '',
+          level: form.level || 'school',
           createdAt: serverTimestamp()
-        });
+        };
+
+        // Add grade for school level or university name for university level
+        if (form.level === 'university') {
+          driveLinkData.universityName = form.universityName || '';
+          driveLinkData.year = form.grade || ''; // Use grade field for year in university context
+        } else {
+          driveLinkData.grade = form.grade || '';
+        }
+
+        await addDoc(collection(db, 'driveLinks'), driveLinkData);
       } else if (mode === 'whatsapp') {
         await addDoc(collection(db, 'whatsappGroups'), {
           subject: form.subject || '',
@@ -503,7 +513,7 @@ export function UploadForm() {
                     required
                     helperText={
                       mode === 'links'
-                        ? 'For links that help everyone, you can type “All subjects”.'
+                        ? 'For links that help everyone, you can type "All subjects".'
                         : ''
                     }
                   />
@@ -511,34 +521,65 @@ export function UploadForm() {
 
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth required>
-                    <InputLabel id="grade-links-label">Grade</InputLabel>
+                    <InputLabel id="level-links-label">Level</InputLabel>
                     <Select
-                      labelId="grade-links-label"
-                      id="grade-links"
-                      name="grade"
-                      label="Grade"
-                      value={form.grade}
+                      labelId="level-links-label"
+                      id="level-links"
+                      name="level"
+                      label="Level"
+                      value={form.level}
                       onChange={handleChange}
                     >
-                      <MenuItem value="">
-                        <em>Grade</em>
-                      </MenuItem>
-                      <MenuItem value="1">Grade 1</MenuItem>
-                      <MenuItem value="2">Grade 2</MenuItem>
-                      <MenuItem value="3">Grade 3</MenuItem>
-                      <MenuItem value="4">Grade 4</MenuItem>
-                      <MenuItem value="5">Grade 5</MenuItem>
-                      <MenuItem value="6">Grade 6</MenuItem>
-                      <MenuItem value="7">Grade 7</MenuItem>
-                      <MenuItem value="8">Grade 8</MenuItem>
-                      <MenuItem value="9">Grade 9</MenuItem>
-                      <MenuItem value="10">Grade 10</MenuItem>
-                      <MenuItem value="11">Grade 11</MenuItem>
-                      <MenuItem value="12">Grade 12</MenuItem>
-                      {/* Grade 13 removed as requested */}
+                      <MenuItem value="school">School</MenuItem>
+                      <MenuItem value="university">University</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
+
+                {form.level === 'school' ? (
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth required>
+                      <InputLabel id="grade-links-label">Grade</InputLabel>
+                      <Select
+                        labelId="grade-links-label"
+                        id="grade-links"
+                        name="grade"
+                        label="Grade"
+                        value={form.grade}
+                        onChange={handleChange}
+                      >
+                        <MenuItem value="">
+                          <em>Grade</em>
+                        </MenuItem>
+                        <MenuItem value="1">Grade 1</MenuItem>
+                        <MenuItem value="2">Grade 2</MenuItem>
+                        <MenuItem value="3">Grade 3</MenuItem>
+                        <MenuItem value="4">Grade 4</MenuItem>
+                        <MenuItem value="5">Grade 5</MenuItem>
+                        <MenuItem value="6">Grade 6</MenuItem>
+                        <MenuItem value="7">Grade 7</MenuItem>
+                        <MenuItem value="8">Grade 8</MenuItem>
+                        <MenuItem value="9">Grade 9</MenuItem>
+                        <MenuItem value="10">Grade 10</MenuItem>
+                        <MenuItem value="11">Grade 11</MenuItem>
+                        <MenuItem value="12">Grade 12</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                ) : (
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      label="University Name"
+                      id="university-name-links"
+                      name="universityName"
+                      placeholder="e.g. University of Colombo, University of Peradeniya"
+                      value={form.universityName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </Grid>
+                )}
               </>
             )}
 

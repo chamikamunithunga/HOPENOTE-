@@ -37,17 +37,18 @@ const initialFormState = {
     file: null,
     whatsappLink: '',
     driveLink: '',
+  oneDriveLink: '',
     universityName: '',
-    description: '',
-    telegramLink: '',
-    whatsappChannelLink: '',
-    youtubeChannelLink: '',
-    websiteLink: ''
+  description: '',
+  telegramLink: '',
+  whatsappChannelLink: '',
+  youtubeChannelLink: '',
+  websiteLink: ''
 };
 
 export function UploadForm() {
   const [form, setForm] = useState(initialFormState);
-  const [mode, setMode] = useState('file'); // 'file' | 'links' | 'whatsapp' | 'uni' | 'telegram' | 'whatsappChannel' | 'youtube' | 'website'
+  const [mode, setMode] = useState('file'); // 'file' | 'links' | 'onedrive' | 'whatsapp' | 'uni' | 'telegram' | 'whatsappChannel' | 'youtube' | 'website'
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -89,6 +90,27 @@ export function UploadForm() {
       }
       // Update form with sanitized URL
       form.driveLink = driveUrl;
+      if (form.level === 'university' && !form.universityName.trim()) {
+        setError('Please enter the University Name.');
+        return;
+      }
+      if (form.level === 'school' && !form.grade) {
+        setError('Please select a Grade.');
+        return;
+      }
+    }
+
+    if (mode === 'onedrive') {
+      const oneDriveUrl = sanitizeUrl(String(form.oneDriveLink || '').trim());
+      // Accept direct OneDrive links and Microsoft Sway pages that host OneDrive content
+      const oneDrivePattern = /^https?:\/\/(onedrive\.live\.com|1drv\.ms|sway\.cloud\.microsoft)\//i;
+      if (!oneDriveUrl || !oneDrivePattern.test(oneDriveUrl)) {
+        setError(
+          'Please paste a valid OneDrive or Microsoft Sway link starting with https://onedrive.live.com, https://1drv.ms, or https://sway.cloud.microsoft.'
+        );
+        return;
+      }
+      form.oneDriveLink = oneDriveUrl;
       if (form.level === 'university' && !form.universityName.trim()) {
         setError('Please enter the University Name.');
         return;
@@ -222,6 +244,15 @@ export function UploadForm() {
         if (isDuplicate) {
           setError(
             'This Google Drive link has already been uploaded. Please check the Browse Notes section or share a different link.'
+          );
+          return;
+        }
+      } else if (mode === 'onedrive') {
+        const oneDriveUrl = String(form.oneDriveLink || '').trim();
+        const isDuplicate = await checkDuplicateDriveLink(oneDriveUrl);
+        if (isDuplicate) {
+          setError(
+            'This OneDrive link has already been uploaded. Please check the Browse Notes section or share a different link.'
           );
           return;
         }
@@ -393,6 +424,24 @@ export function UploadForm() {
         }
 
         await addDoc(collection(db, 'driveLinks'), driveLinkData);
+      } else if (mode === 'onedrive') {
+        const oneDriveData = {
+          medium: form.medium,
+          url: form.oneDriveLink,
+          description: form.subject || '',
+          level: form.level || 'school',
+          createdAt: serverTimestamp(),
+          provider: 'onedrive'
+        };
+
+        if (form.level === 'university') {
+          oneDriveData.universityName = form.universityName || '';
+          oneDriveData.year = form.grade || '';
+        } else {
+          oneDriveData.grade = form.grade || '';
+        }
+
+        await addDoc(collection(db, 'driveLinks'), oneDriveData);
       } else if (mode === 'whatsapp') {
         await addDoc(collection(db, 'whatsappGroups'), {
           subject: form.subject || '',
@@ -477,6 +526,9 @@ export function UploadForm() {
     } else if (mode === 'links') {
       message =
         'Thank you for sharing your Google Drive notes. A student who lost their books in a flood may use your link to catch up again.';
+    } else if (mode === 'onedrive') {
+      message =
+        'Thank you for sharing your OneDrive notes. Your link can help a student who lost access to books and materials keep learning.';
     } else if (mode === 'whatsapp') {
       message =
         'Thank you for opening a WhatsApp study group. In a difficult season for Sri Lanka, your group can feel like a small classroom of hope.';
@@ -611,7 +663,7 @@ export function UploadForm() {
             }}
           >
             Donate / Upload Notes
-          </Typography>
+            </Typography>
           <Typography
             variant="body1"
             sx={{
@@ -623,12 +675,12 @@ export function UploadForm() {
             }}
           >
             Share your educational resources and help students continue learning during difficult times
-          </Typography>
-        </Box>
+            </Typography>
+          </Box>
 
         {/* Logo Image Section */}
         <Box
-          sx={{
+            sx={{
             display: 'flex',
             justifyContent: 'center',
             mb: { xs: 3, sm: 3.5, md: 4 },
@@ -708,7 +760,7 @@ export function UploadForm() {
                 sx={{
                   px: { xs: 1.4, sm: 1.6, md: 1.8 },
                   py: { xs: 0.5, sm: 0.6, md: 0.7 },
-                  borderRadius: 999,
+              borderRadius: 999,
                   fontSize: { xs: 11, sm: 11.5, md: 12 },
                   fontWeight: 700,
                   bgcolor: 'rgba(34,197,94,0.12)',
@@ -723,7 +775,7 @@ export function UploadForm() {
                 sx={{
                   px: { xs: 1.4, sm: 1.6, md: 1.8 },
                   py: { xs: 0.5, sm: 0.6, md: 0.7 },
-                  borderRadius: 999,
+                borderRadius: 999,
                   fontSize: { xs: 11, sm: 11.5, md: 12 },
                   fontWeight: 700,
                   bgcolor: 'rgba(59,130,246,0.12)',
@@ -752,11 +804,11 @@ export function UploadForm() {
             </Box>
           </Box>
 
-          {/* Mobile Dropdown - Show on xs and sm */}
+          {/* Upload type dropdown - Show on all devices */}
           <FormControl
             fullWidth
             sx={{
-              display: { xs: 'block', sm: 'block', md: 'none' },
+              display: 'block',
               width: '100%',
               mb: { xs: 3, sm: 3.5 }
             }}
@@ -829,7 +881,7 @@ export function UploadForm() {
                       : 'transparent',
                   '&:hover': {
                     bgcolor: (theme) =>
-                      theme.palette.mode === 'light'
+                  theme.palette.mode === 'light'
                         ? 'rgba(8,145,178,0.12)'
                         : 'rgba(8,145,178,0.2)'
                   }
@@ -852,13 +904,36 @@ export function UploadForm() {
                       : 'transparent',
                   '&:hover': {
                     bgcolor: (theme) =>
-                      theme.palette.mode === 'light'
+                  theme.palette.mode === 'light'
                         ? 'rgba(34,197,94,0.12)'
                         : 'rgba(34,197,94,0.2)'
                   }
                 }}
               >
                 📁 Google Drive links
+              </MenuItem>
+              <MenuItem 
+                value="onedrive"
+                sx={{
+                  fontSize: { xs: 14, sm: 15 },
+                  fontWeight: 600,
+                  py: { xs: 1, sm: 1.2 },
+                  borderLeft: '4px solid rgba(37,99,235,0.6)',
+                  bgcolor: (theme) =>
+                    mode === 'onedrive'
+                      ? theme.palette.mode === 'light'
+                        ? 'rgba(59,130,246,0.08)'
+                        : 'rgba(37,99,235,0.2)'
+                      : 'transparent',
+                  '&:hover': {
+                    bgcolor: (theme) =>
+                  theme.palette.mode === 'light'
+                        ? 'rgba(59,130,246,0.12)'
+                        : 'rgba(37,99,235,0.3)'
+                  }
+                }}
+              >
+                📂 OneDrive links
               </MenuItem>
               <MenuItem 
                 value="whatsapp"
@@ -875,7 +950,7 @@ export function UploadForm() {
                       : 'transparent',
                   '&:hover': {
                     bgcolor: (theme) =>
-                      theme.palette.mode === 'light'
+                  theme.palette.mode === 'light'
                         ? 'rgba(45,212,191,0.12)'
                         : 'rgba(45,212,191,0.2)'
                   }
@@ -898,7 +973,7 @@ export function UploadForm() {
                       : 'transparent',
                   '&:hover': {
                     bgcolor: (theme) =>
-                      theme.palette.mode === 'light'
+                  theme.palette.mode === 'light'
                         ? 'rgba(168,85,247,0.12)'
                         : 'rgba(168,85,247,0.2)'
                   }
@@ -921,7 +996,7 @@ export function UploadForm() {
                       : 'transparent',
                   '&:hover': {
                     bgcolor: (theme) =>
-                      theme.palette.mode === 'light'
+                  theme.palette.mode === 'light'
                         ? 'rgba(6,182,212,0.12)'
                         : 'rgba(6,182,212,0.2)'
                   }
@@ -1000,190 +1075,6 @@ export function UploadForm() {
               </MenuItem>
             </Select>
           </FormControl>
-
-          {/* Desktop Toggle Buttons - Show on md and above */}
-          <ToggleButtonGroup
-            value={mode}
-            exclusive
-            onChange={(_, value) => value && setMode(value)}
-            size="small"
-            orientation="horizontal"
-            sx={{
-              display: { xs: 'none', sm: 'none', md: 'flex' },
-              borderRadius: 999,
-              bgcolor: 'transparent',
-              flexWrap: 'nowrap',
-              gap: 0.5,
-              width: 'auto',
-              justifyContent: 'flex-end',
-              '& .MuiToggleButton-root': {
-                border: 'none',
-                px: 1.6,
-                py: 0.6,
-                fontSize: 13,
-                textTransform: 'none',
-                borderRadius: 999,
-                fontWeight: 600,
-                color: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? theme.palette.text.secondary
-                    : theme.palette.text.secondary,
-                '&.Mui-selected': {
-                  color: (theme) =>
-                    theme.palette.mode === 'light' ? '#0f172a' : '#e5e7eb',
-                  bgcolor: 'transparent'
-                }
-              },
-              // Upload file (1) — blue
-              '& .MuiToggleButton-root:nth-of-type(1)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(8,145,178,0.25)'
-                    : '1px solid rgba(56,189,248,0.5)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(8,145,178,0.04)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(1).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(8,145,178,0.18), rgba(8,145,178,0.4))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#0f172a' : '#f9fafb'
-              },
-              // Google Drive links (2) — green
-              '& .MuiToggleButton-root:nth-of-type(2)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(34,197,94,0.25)'
-                    : '1px solid rgba(74,222,128,0.5)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(34,197,94,0.04)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(2).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.5))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#064e3b' : '#f9fafb'
-              },
-              // WhatsApp links (3) — teal
-              '& .MuiToggleButton-root:nth-of-type(3)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(45,212,191,0.3)'
-                    : '1px solid rgba(34,211,238,0.6)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(45,212,191,0.06)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(3).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(45,212,191,0.3), rgba(34,211,238,0.6))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#022c22' : '#ecfeff'
-              },
-              // University groups (4) — purple
-              '& .MuiToggleButton-root:nth-of-type(4)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(168,85,247,0.35)'
-                    : '1px solid rgba(192,132,252,0.7)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(168,85,247,0.06)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(4).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(168,85,247,0.35), rgba(129,140,248,0.7))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#111827' : '#eef2ff'
-              },
-              // Telegram groups (5) — cyan
-              '& .MuiToggleButton-root:nth-of-type(5)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(6,182,212,0.35)'
-                    : '1px solid rgba(34,211,238,0.6)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(6,182,212,0.06)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(5).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(6,182,212,0.3), rgba(34,211,238,0.6))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#083344' : '#ecfeff'
-              },
-              // WhatsApp Channels (6) — emerald
-              '& .MuiToggleButton-root:nth-of-type(6)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(16,185,129,0.35)'
-                    : '1px solid rgba(52,211,153,0.6)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(16,185,129,0.06)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(6).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(16,185,129,0.3), rgba(52,211,153,0.6))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#064e3b' : '#d1fae5'
-              },
-              // YouTube Channels (7) — red
-              '& .MuiToggleButton-root:nth-of-type(7)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(239,68,68,0.35)'
-                    : '1px solid rgba(248,113,113,0.6)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(239,68,68,0.06)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(7).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(239,68,68,0.3), rgba(248,113,113,0.6))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#7f1d1d' : '#fee2e2'
-              },
-              // Education Websites (8) — orange
-              '& .MuiToggleButton-root:nth-of-type(8)': {
-                border: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? '1px solid rgba(249,115,22,0.35)'
-                    : '1px solid rgba(251,146,60,0.6)',
-                backgroundColor: (theme) =>
-                  theme.palette.mode === 'light'
-                    ? 'rgba(249,115,22,0.06)'
-                    : 'rgba(15,23,42,0.9)'
-              },
-              '& .MuiToggleButton-root:nth-of-type(8).Mui-selected': {
-                backgroundImage:
-                  'linear-gradient(135deg, rgba(249,115,22,0.3), rgba(251,146,60,0.6))',
-                color: (theme) =>
-                  theme.palette.mode === 'light' ? '#7c2d12' : '#ffedd5'
-              },
-              '& .MuiToggleButtonGroup-grouped:not(:last-of-type)': {
-                marginRight: 0.5
-              }
-            }}
-          >
-            <ToggleButton value="file">Upload file</ToggleButton>
-            <ToggleButton value="links">Google Drive links</ToggleButton>
-            <ToggleButton value="whatsapp">WhatsApp group links</ToggleButton>
-            <ToggleButton value="uni">University groups</ToggleButton>
-            <ToggleButton value="telegram">Telegram groups</ToggleButton>
-            <ToggleButton value="whatsappChannel">WhatsApp Channels</ToggleButton>
-            <ToggleButton value="youtube">YouTube Channels</ToggleButton>
-            <ToggleButton value="website">Other education websites</ToggleButton>
-          </ToggleButtonGroup>
         </Box>
 
         {/* Form Fields Section */}
@@ -1420,7 +1311,7 @@ export function UploadForm() {
               </>
             ) : (
               <>
-                {(mode === 'links' || mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube' || mode === 'website') && (
+                {(mode === 'links' || mode === 'onedrive' || mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube' || mode === 'website') && (
               <>
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -1440,7 +1331,7 @@ export function UploadForm() {
                   />
                 </Grid>
 
-                    {(mode === 'links' || mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube' || mode === 'website') && (
+                    {(mode === 'links' || mode === 'onedrive' || mode === 'telegram' || mode === 'whatsappChannel' || mode === 'youtube' || mode === 'website') && (
                       <>
                         <Grid item xs={12} sm={12} md={6}>
                           <FormControl fullWidth required>
@@ -1514,6 +1405,7 @@ export function UploadForm() {
                       <MenuItem value="">
                         <em>Grade</em>
                       </MenuItem>
+                      <MenuItem value="all">All grades</MenuItem>
                       <MenuItem value="1">Grade 1</MenuItem>
                       <MenuItem value="2">Grade 2</MenuItem>
                       <MenuItem value="3">Grade 3</MenuItem>
@@ -1669,7 +1561,7 @@ export function UploadForm() {
               </FormControl>
             </Grid>
 
-            {mode === 'links' && (
+                {mode === 'links' && (
               <Grid item xs={12} sm={12} md={6}>
                 <TextField
                   fullWidth
@@ -1725,6 +1617,68 @@ export function UploadForm() {
                         theme.palette.mode === 'light'
                           ? 'rgba(8,145,178,0.7)'
                           : 'rgba(56,189,248,0.8)',
+                      borderWidth: '2px'
+                    }
+                  }}
+                />
+              </Grid>
+            )}
+            {mode === 'onedrive' && (
+              <Grid item xs={12} sm={12} md={6}>
+                <TextField
+                  fullWidth
+                  id="onedrive-link"
+                  name="oneDriveLink"
+                  type="url"
+                  label="OneDrive Link (required)"
+                  placeholder="https://onedrive.live.com/... or https://1drv.ms/..."
+                  value={form.oneDriveLink}
+                  onChange={handleChange}
+                  required
+                  helperText="Paste a folder or file link if your notes live on OneDrive."
+                  sx={{
+                    '& .MuiInputBase-root': {
+                      fontSize: { xs: 14, sm: 15, md: 16 },
+                      borderRadius: { xs: 2, sm: 2.5 },
+                      bgcolor: (theme) =>
+                        theme.palette.mode === 'light'
+                          ? 'rgba(255,255,255,0.9)'
+                          : 'rgba(15,23,42,0.6)',
+                      '&:hover': {
+                        bgcolor: (theme) =>
+                          theme.palette.mode === 'light'
+                            ? 'rgba(255,255,255,1)'
+                            : 'rgba(15,23,42,0.8)'
+                      },
+                      '&.Mui-focused': {
+                        bgcolor: (theme) =>
+                          theme.palette.mode === 'light'
+                            ? 'rgba(255,255,255,1)'
+                            : 'rgba(15,23,42,0.9)'
+                      }
+                    },
+                    '& .MuiInputLabel-root': {
+                      fontSize: { xs: 14, sm: 15, md: 16 },
+                      fontWeight: 600
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: (theme) =>
+                        theme.palette.mode === 'light'
+                          ? 'rgba(148,163,184,0.3)'
+                          : 'rgba(148,163,184,0.4)',
+                      borderWidth: '1.5px'
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: (theme) =>
+                        theme.palette.mode === 'light'
+                          ? 'rgba(37,99,235,0.6)'
+                          : 'rgba(96,165,250,0.8)'
+                    },
+                    '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: (theme) =>
+                        theme.palette.mode === 'light'
+                          ? 'rgba(37,99,235,0.8)'
+                          : 'rgba(96,165,250,0.9)',
                       borderWidth: '2px'
                     }
                   }}

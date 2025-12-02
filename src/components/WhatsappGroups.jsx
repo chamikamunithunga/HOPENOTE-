@@ -3,21 +3,32 @@ import { fetchWhatsappGroups } from '../services/whatsappGroups.js';
 import { Box, Paper, Typography, Button, CircularProgress, Chip } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
-export function WhatsappGroups() {
+export function WhatsappGroups({ groups: propGroups }) {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await fetchWhatsappGroups();
-        setGroups(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+    if (propGroups && propGroups.length > 0) {
+      // Use data from props (already fetched in App.jsx)
+      setGroups(propGroups);
+      setLoading(false);
+    } else if (propGroups && propGroups.length === 0) {
+      // Empty array means data was loaded but no groups exist
+      setGroups([]);
+      setLoading(false);
+    } else {
+      // Fallback: fetch if props not provided (backward compatibility)
+      const load = async () => {
+        try {
+          const data = await fetchWhatsappGroups();
+          setGroups(data);
+        } finally {
+          setLoading(false);
+        }
+      };
+      load();
+    }
+  }, [propGroups]);
 
   if (loading) {
     return (

@@ -3,21 +3,29 @@ import { fetchEducationWebsites } from '../services/educationWebsites.js';
 import { Box, Paper, Typography, Button, CircularProgress, Chip } from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
 
-export function EducationWebsites() {
+export function EducationWebsites({ websites: propWebsites }) {
   const [websites, setWebsites] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await fetchEducationWebsites();
-        setWebsites(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+    if (propWebsites && propWebsites.length > 0) {
+      setWebsites(propWebsites);
+      setLoading(false);
+    } else if (propWebsites && propWebsites.length === 0) {
+      setWebsites([]);
+      setLoading(false);
+    } else {
+      const load = async () => {
+        try {
+          const data = await fetchEducationWebsites();
+          setWebsites(data);
+        } finally {
+          setLoading(false);
+        }
+      };
+      load();
+    }
+  }, [propWebsites]);
 
   if (loading) {
     return (

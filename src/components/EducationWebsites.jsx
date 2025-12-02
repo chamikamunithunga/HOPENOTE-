@@ -55,18 +55,32 @@ export function EducationWebsites() {
   }
 
   return (
-    <Box sx={{ display: 'grid', gap: { xs: 1.2, sm: 1.5, md: 1.5 } }}>
+    <Box
+      sx={{
+        display: 'grid',
+        gap: { xs: 1.5, sm: 1.8, md: 2.2 },
+        px: { xs: 0.5, sm: 0 },
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: '1fr',
+          md: 'repeat(2, minmax(0, 1fr))'
+        }
+      }}
+    >
       {websites.map((website) => (
         <Paper
           key={website.id}
           sx={(theme) => ({
-            p: { xs: 1.3, sm: 1.6, md: 1.6 },
-            borderRadius: 2,
+            p: { xs: 1.5, sm: 1.8, md: 2 },
+            borderRadius: { xs: 2.5, sm: 3, md: 3 },
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
             alignItems: { xs: 'stretch', sm: 'center' },
             justifyContent: 'space-between',
-            gap: { xs: 1.2, sm: 1.4, md: 1.4 },
+            gap: { xs: 1.5, sm: 1.8, md: 2 },
             border:
               theme.palette.mode === 'light'
                 ? '1px solid rgba(249,115,22,0.4)'
@@ -74,14 +88,38 @@ export function EducationWebsites() {
             bgcolor:
               theme.palette.mode === 'light'
                 ? 'rgba(255,247,237,0.6)'
-                : 'rgba(77,36,0,0.2)'
+                : 'rgba(77,36,0,0.2)',
+            width: '100%',
+            maxWidth: '100%',
+            boxShadow: (theme) =>
+              theme.palette.mode === 'light'
+                ? '0 2px 8px rgba(249,115,22,0.15)'
+                : '0 2px 8px rgba(0,0,0,0.3)',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              boxShadow: (theme) =>
+                theme.palette.mode === 'light'
+                  ? '0 4px 12px rgba(249,115,22,0.25)'
+                  : '0 4px 12px rgba(0,0,0,0.4)',
+              transform: 'translateY(-2px)'
+            }
           })}
         >
-          <Box sx={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.1, md: 1.1 }, flex: 1 }}>
+          <Box 
+            sx={{ 
+              minWidth: 0, 
+              display: 'flex', 
+              alignItems: { xs: 'flex-start', sm: 'center' }, 
+              gap: { xs: 1.2, sm: 1.4, md: 1.5 }, 
+              flex: 1,
+              width: '100%',
+              flexDirection: { xs: 'row', sm: 'row' }
+            }}
+          >
             <Box
               sx={{
-                width: { xs: 30, sm: 34, md: 34 },
-                height: { xs: 30, sm: 34, md: 34 },
+                width: { xs: 36, sm: 40, md: 44 },
+                height: { xs: 36, sm: 40, md: 44 },
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
@@ -90,40 +128,67 @@ export function EducationWebsites() {
                   'radial-gradient(circle at 30% 0%, #fed7aa, #f97316)',
                 boxShadow: '0 8px 22px rgba(249,115,22,0.55)',
                 color: '#f9fafb',
-                flexShrink: 0
+                flexShrink: 0,
+                minWidth: { xs: 36, sm: 40, md: 44 }
               }}
             >
-              <LanguageIcon sx={{ fontSize: { xs: 18, sm: 20, md: 20 } }} />
+              <LanguageIcon sx={{ fontSize: { xs: 20, sm: 22, md: 24 } }} />
             </Box>
-            <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Box sx={{ minWidth: 0, flex: 1, width: '100%' }}>
               <Typography
                 variant="subtitle2"
                 sx={{
                   fontWeight: 600,
-                  mb: 0.2,
-                  fontSize: { xs: 13, sm: 14, md: 14 },
-                  whiteSpace: { xs: 'normal', sm: 'nowrap' },
-                  textOverflow: 'ellipsis',
-                  overflow: 'hidden'
+                  mb: { xs: 0.5, sm: 0.3 },
+                  fontSize: { xs: 14, sm: 15, md: 16 },
+                  lineHeight: { xs: 1.4, sm: 1.3 },
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  hyphens: 'auto',
+                  color: (theme) =>
+                    theme.palette.mode === 'light'
+                      ? '#1e293b'
+                      : '#f1f5f9'
                 }}
               >
                 {website.subject || 'Education Website'}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mb: website.description ? 0.2 : 0, flexWrap: 'wrap' }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: { xs: 0.5, sm: 0.6, md: 0.8 }, 
+                  mb: website.description ? { xs: 0.8, sm: 0.4 } : 0, 
+                  flexWrap: 'wrap',
+                  mt: { xs: 0.5, sm: 0.3 }
+                }}
+              >
                 {website.level === 'university' ? (
                   <>
                     {website.universityName && (
                       <Chip
                         size="small"
                         label={website.universityName}
-                        sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                        sx={{ 
+                          height: { xs: 20, sm: 22, md: 24 }, 
+                          fontSize: { xs: 10.5, sm: 11, md: 11.5 }, 
+                          borderRadius: 999,
+                          fontWeight: 500,
+                          px: { xs: 0.8, sm: 1 }
+                        }}
                       />
                     )}
                     {website.year && (
                       <Chip
                         size="small"
                         label={`Year ${website.year}`}
-                        sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                        sx={{ 
+                          height: { xs: 20, sm: 22, md: 24 }, 
+                          fontSize: { xs: 10.5, sm: 11, md: 11.5 }, 
+                          borderRadius: 999,
+                          fontWeight: 500,
+                          px: { xs: 0.8, sm: 1 }
+                        }}
                       />
                     )}
                   </>
@@ -133,7 +198,13 @@ export function EducationWebsites() {
                       <Chip
                         size="small"
                         label={`Grade ${website.grade}`}
-                        sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                        sx={{ 
+                          height: { xs: 20, sm: 22, md: 24 }, 
+                          fontSize: { xs: 10.5, sm: 11, md: 11.5 }, 
+                          borderRadius: 999,
+                          fontWeight: 500,
+                          px: { xs: 0.8, sm: 1 }
+                        }}
                       />
                     )}
                   </>
@@ -142,7 +213,13 @@ export function EducationWebsites() {
                   <Chip
                     size="small"
                     label={`Medium: ${website.medium}`}
-                    sx={{ height: { xs: 18, sm: 20 }, fontSize: { xs: 10, sm: 11 }, borderRadius: 999 }}
+                    sx={{ 
+                      height: { xs: 20, sm: 22, md: 24 }, 
+                      fontSize: { xs: 10.5, sm: 11, md: 11.5 }, 
+                      borderRadius: 999,
+                      fontWeight: 500,
+                      px: { xs: 0.8, sm: 1 }
+                    }}
                   />
                 )}
               </Box>
@@ -151,10 +228,16 @@ export function EducationWebsites() {
                   variant="body2"
                   color="text.secondary"
                   sx={{ 
-                    fontSize: { xs: 12, sm: 13 },
-                    whiteSpace: { xs: 'normal', sm: 'nowrap' }, 
-                    textOverflow: 'ellipsis', 
-                    overflow: 'hidden' 
+                    fontSize: { xs: 12.5, sm: 13, md: 13.5 },
+                    lineHeight: { xs: 1.6, sm: 1.5 },
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    mt: { xs: 0.5, sm: 0.3 },
+                    display: { xs: 'block', sm: 'block' },
+                    color: (theme) =>
+                      theme.palette.mode === 'light'
+                        ? '#64748b'
+                        : '#94a3b8'
                   }}
                 >
                   {website.description}
@@ -168,8 +251,14 @@ export function EducationWebsites() {
             onClick={() => website.url && window.open(website.url, '_blank', 'noopener')}
             sx={{ 
               alignSelf: { xs: 'stretch', sm: 'center' },
-              fontSize: { xs: 12, sm: 13, md: 14 },
-              px: { xs: 2, sm: 2.5, md: 2.5 },
+              width: { xs: '100%', sm: 'auto' },
+              minWidth: { xs: '100%', sm: 120, md: 140 },
+              fontSize: { xs: 13, sm: 13.5, md: 14 },
+              fontWeight: 600,
+              px: { xs: 2.5, sm: 3, md: 3.5 },
+              py: { xs: 1, sm: 0.9, md: 1 },
+              borderRadius: { xs: 2, sm: 2.5 },
+              borderWidth: { xs: 1.5, sm: 1 },
               borderColor: (theme) =>
                 theme.palette.mode === 'light'
                   ? 'rgba(249,115,22,0.5)'
@@ -178,6 +267,10 @@ export function EducationWebsites() {
                 theme.palette.mode === 'light'
                   ? '#c2410c'
                   : '#fb923c',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'light'
+                  ? 'rgba(249,115,22,0.05)'
+                  : 'rgba(251,146,60,0.08)',
               '&:hover': {
                 borderColor: (theme) =>
                   theme.palette.mode === 'light'
@@ -185,9 +278,11 @@ export function EducationWebsites() {
                     : 'rgba(251,146,60,0.9)',
                 bgcolor: (theme) =>
                   theme.palette.mode === 'light'
-                    ? 'rgba(249,115,22,0.1)'
-                    : 'rgba(251,146,60,0.15)'
-              }
+                    ? 'rgba(249,115,22,0.15)'
+                    : 'rgba(251,146,60,0.2)',
+                transform: 'scale(1.02)'
+              },
+              transition: 'all 0.2s ease-in-out'
             }}
           >
             Visit Website

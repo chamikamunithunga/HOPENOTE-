@@ -16,6 +16,10 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import logoImage from '../images/Adobe Express - file.png';
 
+
+
+
+
 const navItems = [
   { label: 'Home', href: '#top', variant: 'text' },
   { label: 'Browse Notes', href: '#browse', variant: 'outlined' },

@@ -1,6 +1,7 @@
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { checkDuplicateDriveLink } from "../services/driveLinks.js";
+import { checkDuplicateOneDriveLink } from "../services/oneDriveLinks.js";
 import { checkDuplicateWhatsappLink } from "../services/whatsappGroups.js";
 import { checkDuplicateUniversityLink } from "../services/universityGroups.js";
 import { checkDuplicateTelegramLink } from "../services/telegramGroups.js";
@@ -249,7 +250,7 @@ export function UploadForm() {
         }
       } else if (mode === 'onedrive') {
         const oneDriveUrl = String(form.oneDriveLink || '').trim();
-        const isDuplicate = await checkDuplicateDriveLink(oneDriveUrl);
+        const isDuplicate = await checkDuplicateOneDriveLink(oneDriveUrl);
         if (isDuplicate) {
           setError(
             'This OneDrive link has already been uploaded. Please check the Browse Notes section or share a different link.'
@@ -430,8 +431,7 @@ export function UploadForm() {
           url: form.oneDriveLink,
           description: form.subject || '',
           level: form.level || 'school',
-          createdAt: serverTimestamp(),
-          provider: 'onedrive'
+          createdAt: serverTimestamp()
         };
 
         if (form.level === 'university') {
@@ -441,7 +441,7 @@ export function UploadForm() {
           oneDriveData.grade = form.grade || '';
         }
 
-        await addDoc(collection(db, 'driveLinks'), oneDriveData);
+        await addDoc(collection(db, 'oneDriveLinks'), oneDriveData);
       } else if (mode === 'whatsapp') {
         await addDoc(collection(db, 'whatsappGroups'), {
           subject: form.subject || '',

@@ -1,4 +1,4 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 export async function fetchWhatsappGroups() {
@@ -12,13 +12,13 @@ export async function fetchWhatsappGroups() {
 
 export async function checkDuplicateWhatsappLink(url) {
   try {
-    const normalizedUrl = url.trim().toLowerCase();
-    // Fetch all WhatsApp groups and check in memory for case-insensitive matching
-    const allGroups = await fetchWhatsappGroups();
-    return allGroups.some((group) => {
-      const existingUrl = (group.url || "").trim().toLowerCase();
-      return existingUrl === normalizedUrl;
-    });
+    // Use Firestore query to check for exact URL match (more efficient)
+    const q = query(
+      collection(db, "whatsappGroups"),
+      where("url", "==", url.trim())
+    );
+    const snap = await getDocs(q);
+    return !snap.empty; // If any docs found, it's a duplicate
   } catch (error) {
     console.error("Error checking duplicate WhatsApp link:", error);
     return false;

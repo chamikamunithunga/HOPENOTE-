@@ -20,6 +20,7 @@ const navItems = [
   { label: 'Home', href: '#top', variant: 'text' },
   { label: 'Browse Notes', href: '#browse', variant: 'outlined' },
   { label: 'HN News', href: '#hn-news', variant: 'outlined' },
+  { label: 'About Us', href: '#about', variant: 'outlined' },
   { label: 'Donate / Upload', href: '#donate', variant: 'contained', cta: true },
   { label: 'Feedback', href: '#feedback', variant: 'outlined' }
 ];
@@ -31,8 +32,13 @@ export function Navbar({ mode, onToggleMode }) {
     setOpen(value);
   };
 
-  const handleNavClick = (href) => () => {
+  const handleNavClick = (href) => (event) => {
+    event.preventDefault();
     setOpen(false);
+    // Update URL hash so the app can detect \"HN News\" as a separate view
+    if (href.startsWith('#')) {
+      window.location.hash = href;
+    }
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };

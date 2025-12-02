@@ -1,4 +1,4 @@
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
 export async function fetchOneDriveLinks() {
@@ -12,12 +12,13 @@ export async function fetchOneDriveLinks() {
 
 export async function checkDuplicateOneDriveLink(url) {
   try {
-    const normalizedUrl = url.trim().toLowerCase();
-    const allLinks = await fetchOneDriveLinks();
-    return allLinks.some((link) => {
-      const existingUrl = (link.url || "").trim().toLowerCase();
-      return existingUrl === normalizedUrl;
-    });
+    // Use Firestore query to check for exact URL match (more efficient)
+    const q = query(
+      collection(db, "oneDriveLinks"),
+      where("url", "==", url.trim())
+    );
+    const snap = await getDocs(q);
+    return !snap.empty; // If any docs found, it's a duplicate
   } catch (error) {
     console.error("Error checking duplicate OneDrive link:", error);
     return false;

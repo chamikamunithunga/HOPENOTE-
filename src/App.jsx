@@ -8,7 +8,8 @@ import {
   Select,
   MenuItem,
   CircularProgress,
-  Container
+  Container,
+  Typography
 } from '@mui/material';
 import { Navbar } from './components/Navbar.jsx';
 import { Hero } from './components/Hero.jsx';
@@ -24,6 +25,7 @@ import { Feedback } from './components/Feedback.jsx';
 import { ScrollToTop } from './components/ScrollToTop.jsx';
 import { getAppTheme } from './theme.js';
 import { fetchDriveLinks } from './services/driveLinks.js';
+import { fetchOneDriveLinks } from './services/oneDriveLinks.js';
 import { fetchWhatsappGroups } from './services/whatsappGroups.js';
 import { fetchUniversityGroups } from './services/universityGroups.js';
 import { fetchTelegramGroups } from './services/telegramGroups.js';
@@ -32,6 +34,7 @@ import { fetchYoutubeChannels } from './services/youtubeChannels.js';
 import { fetchEducationWebsites } from './services/educationWebsites.js';
 import { fetchFileUploads } from './services/fileUploads.js';
 import footerLogoImage from './images/Gemini_Generated_Image_d5zif3d5zif3d5zi.png';
+import newsBackgroundImage from './images/Gemini_Generated_Image_y686jby686jby686.png';
 
 export default function App() {
   const [mode, setMode] = useState('light');
@@ -74,8 +77,9 @@ export default function App() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [links, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads] = await Promise.all([
+        const [links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads] = await Promise.all([
           fetchDriveLinks(),
+          fetchOneDriveLinks(),
           fetchWhatsappGroups(),
           fetchUniversityGroups(),
           fetchTelegramGroups(),
@@ -85,20 +89,36 @@ export default function App() {
           fetchFileUploads()
         ]);
 
-        // Map driveLinks + OneDrive docs to the shape expected by NotesGrid
+        // Map Google Drive docs
         const driveNotes = links.map((link) => ({
           id: link.id,
-          subject: link.description || 'Cloud drive resource',
+          subject: link.description || 'Google Drive resource',
           grade: link.grade || link.year || '',
           medium: link.medium || '',
-          curriculum: link.provider === 'onedrive' ? 'OneDrive' : 'Google Drive',
+          curriculum: 'Google Drive',
           title: link.description || 'Shared resource',
           region: '',
           url: link.url,
           level: link.level || 'school',
           universityName: link.universityName || '',
           type: 'drive',
-          provider: link.provider === 'onedrive' ? 'onedrive' : 'google'
+          provider: 'google'
+        }));
+
+        // Map OneDrive docs
+        const oneDriveNotes = oneDriveLinks.map((link) => ({
+          id: link.id,
+          subject: link.description || 'OneDrive resource',
+          grade: link.grade || link.year || '',
+          medium: link.medium || '',
+          curriculum: 'OneDrive',
+          title: link.description || 'Shared resource',
+          region: '',
+          url: link.url,
+          level: link.level || 'school',
+          universityName: link.universityName || '',
+          type: 'drive',
+          provider: 'onedrive'
         }));
 
         // Map telegram groups
@@ -188,13 +208,9 @@ export default function App() {
         console.log('File upload notes mapped:', fileUploadNotes.length);
         console.log('Sample file upload note:', fileUploadNotes[0]);
 
-        // Ensure Google Drive notes come before OneDrive notes
-        const googleDriveNotes = driveNotes.filter((n) => n.provider !== 'onedrive');
-        const oneDriveNotes = driveNotes.filter((n) => n.provider === 'onedrive');
-
         // Combine all notes (Google Drive first, then OneDrive, then others)
         const allNotes = [
-          ...googleDriveNotes,
+          ...driveNotes,
           ...oneDriveNotes,
           ...telegramNotes,
           ...whatsappChannelNotes,
@@ -221,8 +237,8 @@ export default function App() {
   const filteredNotes = useMemo(() => {
     const filtered = notes.filter((note) => {
       const matchesLevel = levelFilter === 'all' || note.level === levelFilter;
-      const matchesGrade =
-        gradeFilter === 'all' || String(note.grade) === String(gradeFilter);
+    const matchesGrade =
+      gradeFilter === 'all' || String(note.grade) === String(gradeFilter);
 
       return matchesLevel && matchesGrade;
     });
@@ -233,7 +249,7 @@ export default function App() {
     return filtered;
   }, [notes, levelFilter, gradeFilter]);
 
-  const showHNNewsOnly = currentHash === '#hn-news';
+  const isStandalonePage = currentHash === '#hn-news' || currentHash === '#about';
 
   return (
     <ThemeProvider theme={theme}>
@@ -242,11 +258,11 @@ export default function App() {
         <Navbar mode={mode} onToggleMode={toggleMode} />
 
         <main>
-          {!showHNNewsOnly && (
+          {!isStandalonePage && (
             <>
               <Hero stats={stats} />
 
-              <section id="browse" className="section">
+          <section id="browse" className="section">
             <div className="section-header">
               <h2>Browse Notes</h2>
               <p className="section-subtitle">
@@ -291,8 +307,8 @@ export default function App() {
                 <FormControl
                   size="small"
                   sx={{ minWidth: { xs: '100%', sm: 180 }, width: { xs: '100%', sm: 'auto' } }}
-                >
-                  <InputLabel id="browse-grade-filter-label">Grade</InputLabel>
+              >
+                <InputLabel id="browse-grade-filter-label">Grade</InputLabel>
                 <Select
                   labelId="browse-grade-filter-label"
                   id="browse-grade-filter"
@@ -395,17 +411,17 @@ export default function App() {
                 </div>
 
                 <EducationWebsites />
-              </section>
+          </section>
 
               <section id="donate" className="section">
-                <div className="section-header">
-                  <h2>Donate / Upload Notes</h2>
-                  <p className="section-subtitle">
+            <div className="section-header">
+              <h2>Donate / Upload Notes</h2>
+              <p className="section-subtitle">
                     Share your notes, links, and study groups so another student can keep learning, even after disaster.
-                  </p>
-                </div>
+              </p>
+            </div>
 
-                <UploadForm />
+            <UploadForm />
               </section>
 
               <section id="feedback" className="section">
@@ -422,38 +438,158 @@ export default function App() {
           )}
 
           {/* HN News as a separate \"page\" view */}
-          <section id="hn-news" className="section" style={{ display: showHNNewsOnly ? 'block' : 'none' }}>
-            <div className="section-header">
-              <h2>HN News</h2>
-              <p className="section-subtitle">
-                Stories, updates, and small wins from students, teachers, and volunteers using HopeNotes
-                across Sri Lanka.
-              </p>
-            </div>
-
-            <Container maxWidth="lg">
+          <section
+            id="hn-news"
+            className="section"
+            style={{ display: currentHash === '#hn-news' ? 'block' : 'none', paddingTop: 0, paddingBottom: 0 }}
+          >
+            <Box
+              sx={{
+                position: 'relative',
+                height: { xs: 400, sm: 450, md: 650 },
+                width: '100vw',
+                ml: 'calc(50% - 50vw)', // make the hero image full-width on all screen sizes
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Background image */}
               <Box
                 sx={{
-                  borderRadius: 3,
-                  p: { xs: 2.5, sm: 3, md: 3.5 },
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundImage: `url(${newsBackgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center center',
+                  backgroundRepeat: 'no-repeat',
+                  filter: 'brightness(0.7)',
+                  transform: 'scale(1.02)'
+                }}
+              />
+
+              {/* Overlay */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  background:
+                    'radial-gradient(circle at 15% 0%, rgba(15,23,42,0.35), transparent 55%), linear-gradient(to bottom, rgba(15,23,42,0.65), rgba(15,23,42,0.85))'
+                }}
+              />
+
+              {/* Content */}
+              <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, py: { xs: 6, md: 8 } }}>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    color: '#f9fafb',
+                    px: { xs: 2, sm: 3, md: 4 }
+                  }}
+                >
+                  <Typography
+                    variant="h3"
+                    sx={{
+                      fontWeight: 800,
+                      mb: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 26, sm: 32, md: 38 },
+                      letterSpacing: { xs: 1.5, md: 2.5 }
+                    }}
+                  >
+                    HOPE<span style={{ color: '#facc15' }}>NOTES</span> NEWS
+                  </Typography>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      mb: { xs: 2, sm: 2.5 },
+                      fontWeight: 600,
+                      fontSize: { xs: 15, sm: 16, md: 18 }
+                    }}
+                  >
+                    Voices from the floods. Stories of courage. Updates from the HopeNotes community.
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      maxWidth: 640,
+                      mx: 'auto',
+                      fontSize: { xs: 13.5, sm: 14.5, md: 15 },
+                      lineHeight: 1.8,
+                      color: 'rgba(226,232,240,0.95)'
+                    }}
+                  >
+                    This page will soon share short stories, news, and real snapshots of how students,
+                    teachers, and volunteers across Sri Lanka are using HopeNotes to keep learning
+                    alive during floods and other disasters.
+                  </Typography>
+                </Box>
+              </Container>
+            </Box>
+          </section>
+
+          {/* About Us as a separate \"page\" view */}
+          <section
+            id="about"
+            className="section"
+            style={{ display: currentHash === '#about' ? 'block' : 'none' }}
+          >
+            <Container maxWidth="md">
+              <Box
+                sx={{
+                  mt: { xs: 6, sm: 7, md: 8 },
+                  mb: { xs: 6, sm: 7, md: 8 },
+                  p: { xs: 2.5, sm: 3, md: 4 },
+                  borderRadius: { xs: 3, sm: 3.5, md: 4 },
                   bgcolor: (theme) =>
                     theme.palette.mode === 'light'
-                      ? 'rgba(240,249,255,0.9)'
-                      : 'rgba(15,23,42,0.9)',
+                      ? 'rgba(240,253,250,0.95)'
+                      : 'rgba(15,23,42,0.96)',
                   border: (theme) =>
                     theme.palette.mode === 'light'
-                      ? '1px dashed rgba(59,130,246,0.5)'
-                      : '1px dashed rgba(96,165,250,0.8)',
-                  textAlign: 'center'
+                      ? '1px solid rgba(34,197,94,0.25)'
+                      : '1px solid rgba(45,212,191,0.45)',
+                  boxShadow: (theme) =>
+                    theme.palette.mode === 'light'
+                      ? '0 18px 40px rgba(15,23,42,0.14)'
+                      : '0 22px 50px rgba(0,0,0,0.6)'
                 }}
               >
-                <p className="section-subtitle" style={{ marginBottom: '0.5rem' }}>
-                  HN News is coming soon.
-                </p>
-                <p className="section-subtitle">
-                  We&apos;ll highlight disaster recovery stories, new features, and real impact from the
-                  HopeNotes community here.
-                </p>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    fontWeight: 800,
+                    mb: { xs: 1.5, sm: 2 },
+                    fontSize: { xs: 24, sm: 28, md: 32 },
+                    textAlign: 'center'
+                  }}
+                >
+                  About HopeNotes
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: 14, sm: 15, md: 16 },
+                    lineHeight: 1.8,
+                    mb: 2
+                  }}
+                >
+                  HopeNotes was created to help Sri Lankan students rebuild their education when
+                  floods, landslides, and other disasters interrupt school. Volunteers, teachers,
+                  and past students can share notes, links, and study groups so that learning never
+                  fully stops.
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: 14, sm: 15, md: 16 },
+                    lineHeight: 1.8
+                  }}
+                >
+                  Every Google Drive folder, OneDrive link, WhatsApp or Telegram group, and uploaded
+                  file is a small act of kindness. Together, they become a island-wide library of
+                  hope — free for any student who needs a second chance to catch up.
+                </Typography>
               </Box>
             </Container>
           </section>

@@ -8,13 +8,9 @@ export function WhatsappGroups({ groups: propGroups }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (propGroups && propGroups.length > 0) {
-      // Use data from props (already fetched in App.jsx)
+    // Check if propGroups is defined (not null/undefined)
+    if (propGroups !== undefined && propGroups !== null) {
       setGroups(propGroups);
-      setLoading(false);
-    } else if (propGroups && propGroups.length === 0) {
-      // Empty array means data was loaded but no groups exist
-      setGroups([]);
       setLoading(false);
     } else {
       // Fallback: fetch if props not provided (backward compatibility)

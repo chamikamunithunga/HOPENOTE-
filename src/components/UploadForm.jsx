@@ -47,7 +47,7 @@ const initialFormState = {
   websiteLink: ''
 };
 
-export function UploadForm() {
+export function UploadForm({ onUploadSuccess }) {
   const [form, setForm] = useState(initialFormState);
   const [mode, setMode] = useState('file'); // 'file' | 'links' | 'onedrive' | 'whatsapp' | 'uni' | 'telegram' | 'whatsappChannel' | 'youtube' | 'website'
   const [status, setStatus] = useState('');
@@ -395,6 +395,13 @@ export function UploadForm() {
         setUploadProgress(0);
         setIsUploading(false);
         setForm(initialFormState);
+        
+        // Refresh data to show the newly uploaded file
+        if (onUploadSuccess) {
+          setTimeout(() => {
+            onUploadSuccess();
+          }, 1000);
+        }
         return;
       } catch (uploadError) {
         console.error('Error uploading file:', uploadError);
@@ -552,6 +559,14 @@ export function UploadForm() {
 
     // Clear form fields after successful submit, keep current mode
     setForm(initialFormState);
+
+    // Refresh data to show the newly uploaded item
+    if (onUploadSuccess) {
+      // Small delay to ensure Firestore has processed the write
+      setTimeout(() => {
+        onUploadSuccess();
+      }, 1000);
+    }
   };
 
   return (

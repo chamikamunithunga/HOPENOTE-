@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, limit } from "firebase/firestore";
 import { db } from "../firebase";
 
 export async function saveFeedback(name, feedback) {
@@ -19,7 +19,8 @@ export async function fetchFeedbacks() {
   try {
     const q = query(
       collection(db, "feedbacks"),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
+      limit(100)
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({

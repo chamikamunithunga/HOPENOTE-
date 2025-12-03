@@ -46,6 +46,7 @@ export default function App() {
   const [mode, setMode] = useState('light');
   const [gradeFilter, setGradeFilter] = useState('all');
   const [levelFilter, setLevelFilter] = useState('all');
+  const [forceRefresh, setForceRefresh] = useState(0);
   const [notes, setNotes] = useState([]);
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [stats, setStats] = useState({
@@ -67,13 +68,22 @@ export default function App() {
   const [newsStatus, setNewsStatus] = useState('');
   const [dataCache, setDataCache] = useState(null);
   const [cacheTimestamp, setCacheTimestamp] = useState(0);
-  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
-  const [whatsappGroups, setWhatsappGroups] = useState([]);
-  const [universityGroups, setUniversityGroups] = useState([]);
-  const [telegramGroups, setTelegramGroups] = useState([]);
-  const [whatsappChannels, setWhatsappChannels] = useState([]);
-  const [youtubeChannels, setYoutubeChannels] = useState([]);
-  const [educationWebsites, setEducationWebsites] = useState([]);
+  const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours cache
+  const CACHE_KEY = 'hopenotes-cache-v1';
+  const [whatsappGroupsData, setWhatsappGroupsData] = useState([]);
+  const [universityGroupsData, setUniversityGroupsData] = useState([]);
+  const [telegramGroupsData, setTelegramGroupsData] = useState([]);
+  const [whatsappChannelsData, setWhatsappChannelsData] = useState([]);
+  const [youtubeChannelsData, setYoutubeChannelsData] = useState([]);
+  const [educationWebsitesData, setEducationWebsitesData] = useState([]);
+
+  // Memoize arrays to prevent unnecessary re-renders in child components
+  const whatsappGroups = useMemo(() => whatsappGroupsData, [whatsappGroupsData]);
+  const universityGroups = useMemo(() => universityGroupsData, [universityGroupsData]);
+  const telegramGroups = useMemo(() => telegramGroupsData, [telegramGroupsData]);
+  const whatsappChannels = useMemo(() => whatsappChannelsData, [whatsappChannelsData]);
+  const youtubeChannels = useMemo(() => youtubeChannelsData, [youtubeChannelsData]);
+  const educationWebsites = useMemo(() => educationWebsitesData, [educationWebsitesData]);
 
   const theme = useMemo(() => getAppTheme(mode), [mode]);
 
@@ -217,9 +227,18 @@ export default function App() {
           fileType: file.fileType || ''
         }));
 
+        console.log('=== DATA PROCESSING ===');
+        console.log('Drive notes:', driveNotes.length);
+        console.log('OneDrive notes:', oneDriveNotes.length);
+        console.log('Telegram notes:', telegramNotes.length);
+        console.log('WhatsApp Channel notes:', whatsappChannelNotes.length);
+        console.log('YouTube notes:', youtubeNotes.length);
+        console.log('Website notes:', websiteNotes.length);
         console.log('File uploads fetched:', fileUploads.length);
         console.log('File upload notes mapped:', fileUploadNotes.length);
-        console.log('Sample file upload note:', fileUploadNotes[0]);
+        if (fileUploadNotes.length > 0) {
+          console.log('Sample file upload note:', fileUploadNotes[0]);
+        }
 
         // Combine all notes (Google Drive first, then OneDrive, then others)
         const allNotes = [
@@ -231,58 +250,116 @@ export default function App() {
           ...websiteNotes,
           ...fileUploadNotes
         ];
+        console.log('=== TOTAL NOTES COMBINED ===');
         console.log('Total notes (including file uploads):', allNotes.length);
+        console.log('Notes breakdown:', {
+          drive: driveNotes.length,
+          oneDrive: oneDriveNotes.length,
+          telegram: telegramNotes.length,
+          whatsappChannel: whatsappChannelNotes.length,
+          youtube: youtubeNotes.length,
+          website: websiteNotes.length,
+          file: fileUploadNotes.length
+        });
+        if (allNotes.length > 0) {
+          console.log('First 3 notes:', allNotes.slice(0, 3));
+        }
         setNotes(allNotes);
-        setNewsItems(news);
+        setNewsItems(news || []);
 
         setStats({
           notes: links.length + fileUploads.length,
           whatsapp: whatsapp.length,
           university: uni.length
         });
-        setNewsItems(news || []);
         // Store data for child components to prevent duplicate fetches
-        setWhatsappGroups(whatsapp || []);
-        setUniversityGroups(uni || []);
-        setTelegramGroups(telegram || []);
-        setWhatsappChannels(whatsappChannels || []);
-        setYoutubeChannels(youtube || []);
-        setEducationWebsites(websites || []);
+        // Only update if data actually changed (prevents unnecessary re-renders)
+        setWhatsappGroupsData(whatsapp || []);
+        setUniversityGroupsData(uni || []);
+        setTelegramGroupsData(telegram || []);
+        setWhatsappChannelsData(whatsappChannels || []);
+        setYoutubeChannelsData(youtube || []);
+        setEducationWebsitesData(websites || []);
       };
 
   useEffect(() => {
     const loadData = async () => {
-      // Check cache first
       const now = Date.now();
-      if (dataCache && (now - cacheTimestamp) < CACHE_DURATION) {
-        // Use cached data
+
+      // 1) Try localStorage cache first
+      try {
+        if (!dataCache && typeof window !== 'undefined') {
+          const cachedString = localStorage.getItem(CACHE_KEY);
+          if (cachedString) {
+            const cached = JSON.parse(cachedString);
+            if (cached.timestamp && (now - cached.timestamp) < CACHE_DURATION) {
+              console.log('Using localStorage cache');
+              setDataCache(cached.data);
+              const { links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news } = cached.data;
+              processData(links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news);
+              setLoadingNotes(false);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to read localStorage cache:', e);
+      }
+
+      // 2) In‑memory cache
+      if (dataCache && cacheTimestamp > 0 && (now - cacheTimestamp) < CACHE_DURATION) {
+        console.log('Using in‑memory cache');
         const { links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news } = dataCache;
         processData(links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news);
         setLoadingNotes(false);
         return;
       }
 
+      console.log('Fetching fresh data from Firestore...');
       try {
-        const [links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news] = await Promise.all([
+        const [links, oneDriveLinks, whatsapp, uni, fileUploads, news] = await Promise.all([
           fetchDriveLinks(),
           fetchOneDriveLinks(),
           fetchWhatsappGroups(),
           fetchUniversityGroups(),
-          fetchTelegramGroups(),
-          fetchWhatsappChannels(),
-          fetchYoutubeChannels(),
-          fetchEducationWebsites(),
           fetchFileUploads(),
           fetchNews()
         ]);
 
-        // Cache the data
-        setDataCache({ links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news });
-        setCacheTimestamp(now);
+        console.log('Data fetched:', {
+          links: links.length,
+          oneDriveLinks: oneDriveLinks.length,
+          whatsapp: whatsapp.length,
+          uni: uni.length,
+          telegram: 0,
+          whatsappChannels: 0,
+          youtube: 0,
+          websites: 0,
+          fileUploads: fileUploads.length,
+          news: news.length
+        });
 
-        processData(links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news);
+        // Cache the data (initially without lazily‑loaded collections)
+        const dataToCache = { links, oneDriveLinks, whatsapp, uni, telegram: [], whatsappChannels: [], youtube: [], websites: [], fileUploads, news };
+        setDataCache(dataToCache);
+        setCacheTimestamp(now);
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify({ timestamp: now, data: dataToCache })
+            );
+          }
+        } catch (e) {
+          console.warn('Failed to write localStorage cache:', e);
+        }
+
+        processData(links, oneDriveLinks, whatsapp, uni, [], [], [], [], fileUploads, news);
       } catch (error) {
         console.error('Error loading data:', error);
+        console.error('Error details:', error.message, error.stack);
+        // Still set loading to false so UI doesn't hang
+        setLoadingNotes(false);
       } finally {
         setLoadingNotes(false);
       }
@@ -294,45 +371,193 @@ export default function App() {
 
   // Function to refresh data (can be called after uploads)
   const refreshData = () => {
+    console.log('Refreshing data after upload...');
     setDataCache(null);
     setCacheTimestamp(0);
+    setLoadingNotes(true);
     const loadData = async () => {
       try {
-        const [links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news] = await Promise.all([
+        console.log('Fetching fresh data after upload...');
+        const [links, oneDriveLinks, whatsapp, uni, fileUploads, news] = await Promise.all([
           fetchDriveLinks(),
           fetchOneDriveLinks(),
           fetchWhatsappGroups(),
           fetchUniversityGroups(),
-          fetchTelegramGroups(),
-          fetchWhatsappChannels(),
-          fetchYoutubeChannels(),
-          fetchEducationWebsites(),
           fetchFileUploads(),
           fetchNews()
         ]);
 
+        console.log('Data refreshed:', {
+          links: links.length,
+          oneDriveLinks: oneDriveLinks.length,
+          whatsapp: whatsapp.length,
+          uni: uni.length,
+          telegram: 0,
+          whatsappChannels: 0,
+          youtube: 0,
+          websites: 0,
+          fileUploads: fileUploads.length,
+          news: news.length
+        });
+
         const now = Date.now();
-        setDataCache({ links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news });
+        const dataToCache = { links, oneDriveLinks, whatsapp, uni, telegram: [], whatsappChannels: [], youtube: [], websites: [], fileUploads, news };
+        setDataCache(dataToCache);
         setCacheTimestamp(now);
-        processData(links, oneDriveLinks, whatsapp, uni, telegram, whatsappChannels, youtube, websites, fileUploads, news);
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(
+              CACHE_KEY,
+              JSON.stringify({ timestamp: now, data: dataToCache })
+            );
+          }
+        } catch (e) {
+          console.warn('Failed to write localStorage cache (refresh):', e);
+        }
+        processData(links, oneDriveLinks, whatsapp, uni, [], [], [], [], fileUploads, news);
       } catch (error) {
         console.error('Error refreshing data:', error);
+        console.error('Error details:', error.message, error.stack);
+      } finally {
+        setLoadingNotes(false);
       }
     };
     loadData();
   };
 
+  // Lazy loaders for extra collections
+  const loadTelegramLazy = async () => {
+    if (telegramGroupsData.length > 0) return;
+    try {
+      const telegram = await fetchTelegramGroups();
+      setTelegramGroupsData(telegram);
+      // Map into notes without refetching everything
+      const telegramNotes = telegram.map((group) => ({
+        id: group.id,
+        subject: group.subject || 'Telegram Group',
+        grade: group.level === 'university' ? group.year || '' : group.grade || '',
+        medium: group.medium || '',
+        curriculum: 'Telegram Group',
+        title: group.subject || 'Telegram Study Group',
+        region: '',
+        url: group.url,
+        level: group.level || 'school',
+        universityName: group.universityName || '',
+        type: 'telegram',
+        description: group.description || ''
+      }));
+      setNotes((prev) => [...prev, ...telegramNotes]);
+    } catch (e) {
+      console.error('Error lazy‑loading telegram groups:', e);
+    }
+  };
+
+  const loadWhatsappChannelsLazy = async () => {
+    if (whatsappChannelsData.length > 0) return;
+    try {
+      const channels = await fetchWhatsappChannels();
+      setWhatsappChannelsData(channels);
+      const channelNotes = channels.map((channel) => ({
+        id: channel.id,
+        subject: channel.subject || 'WhatsApp Channel',
+        grade: channel.level === 'university' ? channel.year || '' : channel.grade || '',
+        medium: channel.medium || '',
+        curriculum: 'WhatsApp Channel',
+        title: channel.subject || 'WhatsApp Channel',
+        region: '',
+        url: channel.url,
+        level: channel.level || 'school',
+        universityName: channel.universityName || '',
+        type: 'whatsappChannel',
+        description: channel.description || ''
+      }));
+      setNotes((prev) => [...prev, ...channelNotes]);
+    } catch (e) {
+      console.error('Error lazy‑loading whatsapp channels:', e);
+    }
+  };
+
+  const loadYoutubeLazy = async () => {
+    if (youtubeChannelsData.length > 0) return;
+    try {
+      const channels = await fetchYoutubeChannels();
+      setYoutubeChannelsData(channels);
+      const youtubeNotes = channels.map((channel) => ({
+        id: channel.id,
+        subject: channel.subject || 'YouTube Channel',
+        grade: channel.level === 'university' ? channel.year || '' : channel.grade || '',
+        medium: channel.medium || '',
+        curriculum: 'YouTube Channel',
+        title: channel.subject || 'YouTube Channel',
+        region: '',
+        url: channel.url,
+        level: channel.level || 'school',
+        universityName: channel.universityName || '',
+        type: 'youtube',
+        description: channel.description || ''
+      }));
+      setNotes((prev) => [...prev, ...youtubeNotes]);
+    } catch (e) {
+      console.error('Error lazy‑loading youtube channels:', e);
+    }
+  };
+
+  const loadWebsitesLazy = async () => {
+    if (educationWebsitesData.length > 0) return;
+    try {
+      const websites = await fetchEducationWebsites();
+      setEducationWebsitesData(websites);
+      const websiteNotes = websites.map((website) => ({
+        id: website.id,
+        subject: website.subject || 'Education Website',
+        grade: website.level === 'university' ? website.year || '' : website.grade || '',
+        medium: website.medium || '',
+        curriculum: 'Education Website',
+        title: website.subject || 'Education Website',
+        region: '',
+        url: website.url,
+        level: website.level || 'school',
+        universityName: website.universityName || '',
+        type: 'website',
+        description: website.description || ''
+      }));
+      setNotes((prev) => [...prev, ...websiteNotes]);
+    } catch (e) {
+      console.error('Error lazy‑loading education websites:', e);
+    }
+  };
+
   const filteredNotes = useMemo(() => {
+    console.log('=== FILTERING NOTES ===');
+    console.log('Total notes available:', notes.length);
+    console.log('Level filter:', levelFilter);
+    console.log('Grade filter:', gradeFilter);
+    console.log('Sample notes:', notes.slice(0, 3));
+    
     const filtered = notes.filter((note) => {
       const matchesLevel = levelFilter === 'all' || note.level === levelFilter;
-    const matchesGrade =
-      gradeFilter === 'all' || String(note.grade) === String(gradeFilter);
-
+      const matchesGrade = gradeFilter === 'all' || String(note.grade) === String(gradeFilter);
+      
+      if (!matchesLevel) {
+        console.log('Note filtered out by level:', note.subject, 'level:', note.level, 'filter:', levelFilter);
+      }
+      if (!matchesGrade) {
+        console.log('Note filtered out by grade:', note.subject, 'grade:', note.grade, 'filter:', gradeFilter);
+      }
+      
       return matchesLevel && matchesGrade;
     });
     
     console.log('Filtered notes:', filtered.length, 'out of', notes.length);
     console.log('File uploads in filtered:', filtered.filter(n => n.type === 'file').length);
+    console.log('Breakdown by type:', {
+      drive: filtered.filter(n => n.type === 'drive').length,
+      file: filtered.filter(n => n.type === 'file').length,
+      telegram: filtered.filter(n => n.type === 'telegram').length,
+      whatsappChannel: filtered.filter(n => n.type === 'whatsappChannel').length,
+      youtube: filtered.filter(n => n.type === 'youtube').length,
+      website: filtered.filter(n => n.type === 'website').length
+    });
     
     return filtered;
   }, [notes, levelFilter, gradeFilter]);
@@ -433,6 +658,23 @@ export default function App() {
                 gap: 1.5
               }}
             >
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  console.log('🔄 Manual refresh triggered - clearing cache and reloading...');
+                  setDataCache(null);
+                  setCacheTimestamp(0);
+                  setLoadingNotes(true);
+                  refreshData();
+                }}
+                sx={{
+                  minWidth: { xs: '100%', sm: 'auto' },
+                  order: { xs: -1, sm: 0 }
+                }}
+              >
+                🔄 Refresh Data
+              </Button>
               <FormControl
                 size="small"
                 sx={{ minWidth: { xs: '100%', sm: 160 }, width: { xs: '100%', sm: 'auto' } }}
@@ -530,7 +772,18 @@ export default function App() {
                   </p>
                 </div>
 
-                <TelegramGroups groups={telegramGroups} />
+                <Box sx={{ mb: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={loadTelegramLazy}
+                    disabled={telegramGroups.length > 0}
+                  >
+                    {telegramGroups.length > 0 ? 'Telegram groups loaded' : 'Show Telegram groups'}
+                  </Button>
+                </Box>
+
+                {telegramGroups.length > 0 && <TelegramGroups groups={telegramGroups} />}
               </section>
 
               <section id="whatsapp-channels" className="section">
@@ -541,7 +794,18 @@ export default function App() {
                   </p>
                 </div>
 
-                <WhatsappChannels channels={whatsappChannels} />
+                <Box sx={{ mb: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={loadWhatsappChannelsLazy}
+                    disabled={whatsappChannels.length > 0}
+                  >
+                    {whatsappChannels.length > 0 ? 'WhatsApp channels loaded' : 'Show WhatsApp channels'}
+                  </Button>
+                </Box>
+
+                {whatsappChannels.length > 0 && <WhatsappChannels channels={whatsappChannels} />}
               </section>
 
               <section id="youtube-channels" className="section">
@@ -552,7 +816,19 @@ export default function App() {
                   </p>
                 </div>
 
-                <YoutubeChannels channels={youtubeChannels} />
+                <Box sx={{ mb: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    color="error"
+                    onClick={loadYoutubeLazy}
+                    disabled={youtubeChannels.length > 0}
+                  >
+                    {youtubeChannels.length > 0 ? 'YouTube channels loaded' : 'Show YouTube channels'}
+                  </Button>
+                </Box>
+
+                {youtubeChannels.length > 0 && <YoutubeChannels channels={youtubeChannels} />}
               </section>
 
               <section id="education-websites" className="section">
@@ -563,7 +839,19 @@ export default function App() {
                   </p>
                 </div>
 
-                <EducationWebsites websites={educationWebsites} />
+                <Box sx={{ mb: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    color="secondary"
+                    onClick={loadWebsitesLazy}
+                    disabled={educationWebsites.length > 0}
+                  >
+                    {educationWebsites.length > 0 ? 'Websites loaded' : 'Show education websites'}
+                  </Button>
+                </Box>
+
+                {educationWebsites.length > 0 && <EducationWebsites websites={educationWebsites} />}
           </section>
 
               <section id="donate" className="section">
@@ -574,7 +862,7 @@ export default function App() {
               </p>
             </div>
 
-            <UploadForm />
+            <UploadForm onUploadSuccess={refreshData} />
               </section>
 
               <section id="feedback" className="section">

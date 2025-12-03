@@ -1,11 +1,12 @@
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where, limit } from "firebase/firestore";
 import { db } from "../firebase";
 
 export async function fetchEducationWebsites() {
   try {
     const q = query(
       collection(db, "educationWebsites"),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
+      limit(100)
     );
     const snap = await getDocs(q);
     return snap.docs.map((doc) => ({

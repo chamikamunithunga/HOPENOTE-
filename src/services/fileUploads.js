@@ -1,4 +1,4 @@
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase.js';
 
 /**
@@ -7,7 +7,11 @@ import { db } from '../firebase.js';
  */
 export async function fetchFileUploads() {
   try {
-    const q = query(collection(db, 'fileUploads'), orderBy('createdAt', 'desc'));
+    const q = query(
+      collection(db, 'fileUploads'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    );
     const querySnapshot = await getDocs(q);
     
     const uploads = querySnapshot.docs.map((doc) => ({
@@ -21,7 +25,9 @@ export async function fetchFileUploads() {
     console.error('Error fetching file uploads:', error);
     // If orderBy fails (no createdAt field), try without ordering
     try {
-      const querySnapshot = await getDocs(collection(db, 'fileUploads'));
+      const querySnapshot = await getDocs(
+        query(collection(db, 'fileUploads'), limit(100))
+      );
       const uploads = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
